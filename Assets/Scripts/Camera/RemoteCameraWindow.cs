@@ -24,6 +24,7 @@ public class RemoteCameraWindow : MonoBehaviour
     private byte[] _imageBuffer;
     private CancellationTokenSource _receiveImageTs = null;
     private Task _imageReceiveTask;
+    private Coroutine _startListenCoroutine;
     private bool _listening;
     private float _nextDecoderPollRealtime;
     private float _nextHealthRealtime;
@@ -66,16 +67,12 @@ public class RemoteCameraWindow : MonoBehaviour
         _bitrate = bitrate;
         ResetPerformanceWindow();
 
-        StartCoroutine(OnStartListen(port));
+        _startListenCoroutine = StartCoroutine(OnStartListen(port));
     }
 
     private void OnDisable()
     {
-        if (_listening)
-        {
-            MediaDecoder.release();
-            _listening = false;
-        }
+        StopListen();
         if (_texture != null)
         {
             if (RemoteCameraImage != null)
@@ -87,6 +84,34 @@ public class RemoteCameraWindow : MonoBehaviour
         }
         Debug.Log("RemoteCameraWindow OnDisable");
         TcpHandler.SendFunctionValue("StopReceivePcCamera", "");
+    }
+
+    public void StopListen()
+    {
+        if (_startListenCoroutine != null)
+        {
+            StopCoroutine(_startListenCoroutine);
+            _startListenCoroutine = null;
+        }
+
+        if (_listening)
+        {
+            // The Android implementation closes both the listening ServerSocket
+            // and an accepted Socket before joining its receive thread. This also
+            // covers Listen-off while no video sender has connected yet.
+            MediaDecoder.release();
+            _listening = false;
+        }
+
+        if (_texture != null)
+        {
+            if (RemoteCameraImage != null)
+            {
+                RemoteCameraImage.texture = null;
+            }
+            Destroy(_texture);
+            _texture = null;
+        }
     }
 
     public void OnCloseBtn()
@@ -108,6 +133,7 @@ public class RemoteCameraWindow : MonoBehaviour
 
         MediaDecoder.initialize((int)_texture.GetNativeTexturePtr(), _resolutionWidth, _resolutionHeight);
         MediaDecoder.startServer(port, false);
+        _startListenCoroutine = null;
         yield return null;
 
         JsonData cameraParam = new JsonData();

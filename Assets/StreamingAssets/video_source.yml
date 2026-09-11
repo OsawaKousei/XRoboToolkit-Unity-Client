@@ -39,6 +39,35 @@
       type: "int"
       description: "Raw PCM audio stream port from the operator bridge"
       value: 13580
+
+- name: "TOROBO_CAMERA"
+  camera: "ROS_CAMERA"
+  description: "Torobo SR300 mono camera (duplicated side-by-side)"
+  properties:
+    - name: "visibleRatio"
+      type: "float"
+      value: 0.555
+    - name: "contentRatio"
+      type: "float"
+      value: 1.8
+    - name: "heightCompressionFactor"
+      type: "float"
+      value: 1.333333
+    - name: "RawImageRectSize"
+      type: "string"
+      value: "600x225"
+    - name: "CamWidth"
+      type: "int"
+      value: 1280
+    - name: "CamHeight"
+      type: "int"
+      value: 480
+    - name: "CamFPS"
+      type: "int"
+      value: 30
+    - name: "CamBitrate"
+      type: "int"
+      value: 4000000
   
 - name: "ZEDMINI"
   camera: "ZED"

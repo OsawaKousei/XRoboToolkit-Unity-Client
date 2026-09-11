@@ -888,6 +888,8 @@ public partial class UICameraCtrl : MonoBehaviour
 
     private void OnDestroy()
     {
+        SendCloseCameraIfConnected();
+        StopRemoteCameraDecoder();
         StopCameraRequestCoroutine();
         StopDuplexAudio();
         TcpHandler.ReceiveFunctionEvent -= OnNetReceive;
@@ -1375,9 +1377,11 @@ public partial class UICameraCtrl : MonoBehaviour
             controlReconnectSuppressed = true;
             if (operatorControlClient != null && operatorControlClient.IsRunning)
             {
+                SendCloseCameraIfConnected();
                 operatorControlClient.DisconnectSilently();
             }
             controlClientConnected = false;
+            StopRemoteCameraDecoder();
         }
 
         if (CameraHandle.GetCaptureState() == (int)PXRCaptureState.CAPTURE_STATE_CAMERA_OPENING)
@@ -1423,9 +1427,39 @@ public partial class UICameraCtrl : MonoBehaviour
         controlReconnectSuppressed = true;
         if (operatorControlClient != null && operatorControlClient.IsRunning)
         {
+            SendCloseCameraIfConnected();
             operatorControlClient.DisconnectSilently();
         }
         controlClientConnected = false;
+        StopRemoteCameraDecoder();
+    }
+
+    private void OnApplicationQuit()
+    {
+        SendCloseCameraIfConnected();
+        StopRemoteCameraDecoder();
+    }
+
+    private void SendCloseCameraIfConnected()
+    {
+        if (controlClientConnected &&
+            operatorControlClient != null &&
+            operatorControlClient.IsConnected)
+        {
+            operatorControlClient.SendCommand(NetworkCommand.CLOSE_CAMERA, new byte[0]);
+        }
+    }
+
+    private void StopRemoteCameraDecoder()
+    {
+        if (RemoteCameraWindowObj == null)
+        {
+            return;
+        }
+
+        RemoteCameraWindow remoteCameraWindow =
+            RemoteCameraWindowObj.GetComponent<RemoteCameraWindow>();
+        remoteCameraWindow?.StopListen();
     }
 
     private void OnEnable()

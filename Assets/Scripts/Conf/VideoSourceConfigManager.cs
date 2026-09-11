@@ -9,6 +9,7 @@ using UnityEngine.Networking;
 public class VideoSourceConfigManager : MonoBehaviour
 {
     private const string CloudProfileMigrationMarker = ".video_source_cloud_profile_v2";
+    private const string ToroboProfileMigrationMarker = ".video_source_torobo_profile_v1";
 
     [Header("Configuration")] [SerializeField]
     private string yamlFileName = "video_source.yml";
@@ -94,6 +95,7 @@ public class VideoSourceConfigManager : MonoBehaviour
             if (File.Exists(yamlPath))
             {
                 MigrateLegacyCloudProfileOnce(yamlPath);
+                AddToroboProfileOnce(yamlPath);
                 LoadConfiguration(yamlPath);
                 Debug.Log($"Load video_source.yml from {yamlPath}");
             } else {
@@ -106,6 +108,31 @@ public class VideoSourceConfigManager : MonoBehaviour
         {
             Debug.Log($"Failed to initialize VideoSourceConfigManager: {e.Message}");
             isInitialized = false;
+        }
+    }
+
+    private void AddToroboProfileOnce(string yamlPath)
+    {
+        string markerPath = Path.Combine(Application.persistentDataPath, ToroboProfileMigrationMarker);
+        if (File.Exists(markerPath))
+        {
+            return;
+        }
+
+        try
+        {
+            string yaml = File.ReadAllText(yamlPath);
+            if (ToroboVideoProfileMigration.TryAppend(yaml, out string migratedYaml))
+            {
+                File.WriteAllText(yamlPath, migratedYaml);
+                Debug.Log("Added TOROBO_CAMERA to the persistent video source configuration.");
+            }
+
+            File.WriteAllText(markerPath, "TOROBO_CAMERA/v1\n");
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"Failed to add the TOROBO_CAMERA video profile: {e.Message}");
         }
     }
 

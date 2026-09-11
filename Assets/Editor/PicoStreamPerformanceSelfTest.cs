@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
@@ -12,6 +13,7 @@ public static class PicoStreamPerformanceSelfTest
         try
         {
             AssertCloudVideoProfile();
+            AssertToroboVideoProfile();
             AssertLegacyProfileMigration();
             AssertMicrophoneCapturePlan();
             Debug.Log("PICO_STREAM_PERFORMANCE_SELF_TEST=PASS");
@@ -21,6 +23,41 @@ public static class PicoStreamPerformanceSelfTest
             throw new BuildFailedException(
                 $"Pico stream performance self-test failed: {exception}");
         }
+    }
+
+    private static void AssertToroboVideoProfile()
+    {
+        string path = Path.Combine(Application.streamingAssetsPath, "video_source.yml");
+        string currentYaml = File.ReadAllText(path);
+        VideoSource torobo = VideoSourceYamlParser.ParseYamlFile(path)
+            .Find(source => string.Equals(
+                source.name,
+                ToroboVideoProfileMigration.ProfileName,
+                StringComparison.OrdinalIgnoreCase));
+        if (torobo == null)
+        {
+            throw new InvalidOperationException("TOROBO_CAMERA source is missing");
+        }
+
+        AssertEqual(1280, torobo.GetIntProperty("CamWidth"), "TOROBO_CAMERA width");
+        AssertEqual(480, torobo.GetIntProperty("CamHeight"), "TOROBO_CAMERA height");
+        AssertEqual(30, torobo.GetIntProperty("CamFPS"), "TOROBO_CAMERA FPS");
+        AssertEqual(4000000, torobo.GetIntProperty("CamBitrate"), "TOROBO_CAMERA bitrate");
+
+        if (ToroboVideoProfileMigration.TryAppend(currentYaml, out _))
+        {
+            throw new InvalidOperationException("TOROBO_CAMERA migration must be idempotent");
+        }
+
+        string withoutTorobo = Regex.Replace(
+            currentYaml,
+            @"(?ms)^- name: [""']TOROBO_CAMERA[""'].*?(?=^- name:|\z)",
+            string.Empty);
+        if (!ToroboVideoProfileMigration.TryAppend(withoutTorobo, out string migratedYaml))
+        {
+            throw new InvalidOperationException("TOROBO_CAMERA was not added to an existing profile");
+        }
+        AssertContains(migratedYaml, "name: \"TOROBO_CAMERA\"", "migrated TOROBO_CAMERA");
     }
 
     private static void AssertLegacyProfileMigration()
