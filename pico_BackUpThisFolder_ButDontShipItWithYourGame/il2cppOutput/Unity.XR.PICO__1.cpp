@@ -8262,7 +8262,7 @@ IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR ByteU5BU5D_tA6237BF417AE52AD70CFB4EF24A7A8261
 		FileStream_t07C7222EE10B75F352B89B76E60820160FF10AD8* L_2 = V_0;
 		NullCheck(L_2);
 		int64_t L_3;
-		L_3 = VirtualFuncInvoker2< int64_t, int64_t, int32_t >::Invoke(20, L_2, ((int64_t)0), 0);
+		L_3 = VirtualFuncInvoker2< int64_t, int64_t, int32_t >::Invoke(21, L_2, ((int64_t)0), 0);
 		FileStream_t07C7222EE10B75F352B89B76E60820160FF10AD8* L_4 = V_0;
 		NullCheck(L_4);
 		int64_t L_5;
@@ -8278,10 +8278,10 @@ IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR ByteU5BU5D_tA6237BF417AE52AD70CFB4EF24A7A8261
 		L_10 = VirtualFuncInvoker0< int64_t >::Invoke(10, L_9);
 		NullCheck(L_7);
 		int32_t L_11;
-		L_11 = VirtualFuncInvoker3< int32_t, ByteU5BU5D_tA6237BF417AE52AD70CFB4EF24A7A82613DF9031*, int32_t, int32_t >::Invoke(21, L_7, L_8, 0, ((int32_t)L_10));
+		L_11 = VirtualFuncInvoker3< int32_t, ByteU5BU5D_tA6237BF417AE52AD70CFB4EF24A7A82613DF9031*, int32_t, int32_t >::Invoke(22, L_7, L_8, 0, ((int32_t)L_10));
 		FileStream_t07C7222EE10B75F352B89B76E60820160FF10AD8* L_12 = V_0;
 		NullCheck(L_12);
-		VirtualActionInvoker0::Invoke(13, L_12);
+		VirtualActionInvoker0::Invoke(14, L_12);
 		FileStream_t07C7222EE10B75F352B89B76E60820160FF10AD8* L_13 = V_0;
 		NullCheck(L_13);
 		Stream_Dispose_mCDB42F32A17541CCA6D3A5906827A401570B07A8(L_13, NULL);
