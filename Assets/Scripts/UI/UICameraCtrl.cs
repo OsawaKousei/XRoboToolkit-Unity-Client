@@ -83,6 +83,11 @@ public partial class UICameraCtrl : MonoBehaviour
     public Toggle trackingToggle;
     public Toggle visionToggle;
 
+    private Texture2D _texture;
+    public Texture2D Texture => _texture;
+
+    public RawImage localCameraImage;
+
     private void Awake()
     {
         CrashProbe.Breadcrumb("camera_ctrl.awake");
@@ -842,7 +847,7 @@ public partial class UICameraCtrl : MonoBehaviour
             VideoSourceConfigManager.Instance.CurrentVideoSource.camera,
             localIP, // local ip
             streamingPort);
-        
+
         LogWindow.Info("Requesting camera stream with config: " + customConfig.ToString());
 
         // Utils.WriteLog(logTag, $"send camera config: {customConfig}");
@@ -1207,7 +1212,7 @@ public partial class UICameraCtrl : MonoBehaviour
         }
     }
 
-    private void StartRecord(int width, int height, int fps, int bitrate,
+    public IEnumerator OnStartRecord(int width, int height, int fps, int bitrate,
         bool onTrackingData)
     {
         LogWindow.Info($"Start record {width}x{height}@{fps} fps {bitrate} bps Tracking: {onTrackingData}");
@@ -1215,11 +1220,19 @@ public partial class UICameraCtrl : MonoBehaviour
         if (!Utils.IsPico4U())
         {
             Toast.Show("Please use B-end pico4U devices and apply for camera permissions.");
-            return;
+            yield break;
         }
 
-        Toast.Show("Start Record");
-        Debug.Log("StartRecord:" + width + "," + height + "," + fps + "," + bitrate + "," + onTrackingData);
+        _texture = new Texture2D(width, height, TextureFormat.RGB24, false, false);
+        localCameraImage.texture = _texture;
+
+        yield return new WaitForSeconds(0.1f);
+
+        CameraHandle.initializeTexture((int)_texture.GetNativeTexturePtr(), width, height);
+        GL.InvalidateState();
+
+        yield return new WaitForSeconds(0.1f);
+
         CameraHandle.StartCameraPreview(width, height, fps, bitrate, 0,
             (int)PXRCaptureRenderMode.PXRCapture_RenderMode_3D,
             () =>
@@ -1235,7 +1248,24 @@ public partial class UICameraCtrl : MonoBehaviour
             });
 
         RecordBtn.SetOn(true);
+
         // PreviewCameraTog.gameObject.SetActive(true);
+    }
+
+    private void StartRecord(int width, int height, int fps, int bitrate,
+        bool onTrackingData)
+    {
+        //The VR camera image acquisition is only effective on the B-end device of Pico4U.
+        if (!Utils.IsPico4U())
+        {
+            Toast.Show("Please use B-end pico4U devices and apply for camera permissions.");
+            return;
+        }
+
+        Toast.Show("Start Record");
+        Debug.Log("StartRecord:" + width + "," + height + "," + fps + "," + bitrate + "," + onTrackingData);
+
+        StartCoroutine(OnStartRecord(width, height, fps, bitrate, onTrackingData));
     }
 
     public void UpdateCameraParamsNew()
@@ -1274,14 +1304,12 @@ public partial class UICameraCtrl : MonoBehaviour
             _writer = null;
         }
 
-        CameraHandle.StopPreview();
         CameraHandle.CloseCamera();
         RecordBtn.SetOn(false);
     }
 
     private void StopSendImage()
     {
-        CameraHandle.StopPreview();
         CameraHandle.CloseCamera();
         CameraSendToBtn.SetOn(false);
     }
@@ -1327,6 +1355,18 @@ public partial class UICameraCtrl : MonoBehaviour
     private void Update()
     {
         RunControlConnectionWatchdog();
+        if (_texture != null)
+        {
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                if (CameraHandle.isUpdateFrame())
+                {
+                    CameraHandle.updateTexture();
+                    GL.InvalidateState();
+                }
+            }
+        }
+
         if (_recordTrackingData)
         {
             if (_writer != null)
