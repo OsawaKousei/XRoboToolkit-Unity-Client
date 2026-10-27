@@ -6,18 +6,18 @@ Torobo頭部のIntel RealSense SR300カラー映像をROS 1からROS 2へ渡し�
 ROS 2ホストでH.264に変換してPICO4へ表示する。同じ操作セッションについて、
 映像、左右腕の操作目標、Toroboへ送信した指令、左右腕の実関節角度をrosbagへ残す。
 
-この文書はUnity担当者への依頼仕様である。参照用の
+この文書はUnity担当者とROS担当者への引き継ぎ仕様である。参照用の
 `tmp/XRoboToolkit-Unity-Client`は変更せず、実際のUnityワークスペースで対応すること。
 
-## 現在のシステム構成
+## 100Mbps対応後の目標システム構成
 
 ```text
 Intel RealSense SR300
   │ USB 3
   ▼
 ROS 1 PC bri@192.168.10.2 (Ubuntu 16.04 / ROS Kinetic)
-  │ /torobo/head/camera/color/image_raw (640x480 RGB, 30 fps)
-  │ 有線LAN / ros1_bridge
+  │ /torobo/head/camera/color/image_raw/compressed (JPEG, 30 fps)
+  │ 100BASE-TX / ros1_bridge
   ▼
 ROS 2ホスト
   有線: 192.168.10.1
@@ -155,7 +155,7 @@ ListenをOFFにし、直後のListen ONで12345番を再利用できることを
 互換layerである。第一段階では維持する。将来640x480 monoへ最適化する場合は、
 両眼がfull textureを参照するようshaderも同時に変更する。
 
-## ROS側で実装済みの内容
+## 既存のROS側構成
 
 ROS 2の`xrobotoolkit_teleop_with_service.launch.py`は次を既定で行う。
 
@@ -183,6 +183,105 @@ rosbag記録対象:
 /torobo/head/camera/color/camera_info
 /xrobot/video_stream/status
 ```
+
+## 100BASE-TX環境でROS側に必要な対応
+
+### 背景と判断
+
+ROS 2ホストの有線interface `enp6s0`は、実機確認時に次の状態だった。
+
+```text
+Speed: 100Mb/s
+Duplex: Full
+Link detected: yes
+```
+
+`640 x 480 x RGB 3 byte x 30 fps`のraw image payloadは約27.6 MB/s
+（221 Mbps）であり、ROS serialization、TCP/IP等のoverheadを含める前から
+100BASE-TXの物理帯域を超える。したがって現在のlink速度のまま
+`sensor_msgs/Image`を30 fpsでbridgeする構成は採用しない。
+
+1 GbEへ変更できる場合はraw image bridgeへ戻す方が、JPEG decode負荷と
+二重の非可逆圧縮を避けられる。100Mbpsで運用する場合は、以下のcompressed経路を
+ROS側へ実装する。
+
+```text
+SR300 sensor_msgs/Image (ROS 1 PC内)
+  -> JPEG encode
+  -> sensor_msgs/CompressedImage
+  -> 100BASE-TX / ros1_bridge
+  -> JPEG decode (ROS 2 host)
+  -> 640x480 monoを左右複製して1280x480 SBS化
+  -> H.264 encode
+  -> 4-byte big-endian length + Annex-B H.264 / TCP
+  -> PICO4:12345
+```
+
+### 必須対応と理由
+
+| 対応 | 実装場所 | 理由 |
+|---|---|---|
+| SR300のraw imageをJPEGへ変換し、`sensor_msgs/CompressedImage`としてpublishする | ROS 1 PC | 221 Mbps以上となるraw imageを100Mbps区間へ流さないため |
+| JPEG qualityをlaunch parameter化する（初期値の目安は80） | ROS 1 PC | 画質、帯域、encode負荷を実機映像に合わせて調整するため |
+| ros1_bridgeではcompressed imageと`CameraInfo`をbridgeし、同じraw image topicを有線区間へ同時に流さない | bridge構成 | compressed経路を追加してもraw経路が残れば100Mbps linkが飽和するため |
+| `xrobot_camera_streamer`を`CompressedImage`購読に対応させ、JPEGをdecodeする | ROS 2ホスト | SBS化とH.264 encodeにはpixel imageが必要なため |
+| subscriber/publisher queueを原則1、または同等の「最新frame優先」にする | ROS 1、bridge、ROS 2 | 処理落ち時に古いframeが蓄積し、表示遅延が増え続けることを防ぐため |
+| JPEG decode失敗、空data、想定外formatをframe単位で破棄し、processを停止させない | ROS 2ホスト | 一時的な破損やframe lossから次の正常frameで復帰するため |
+| 入力解像度とframe rateを監視し、640x480以外は明示的に拒否または設定どおりresizeする | ROS 2ホスト | 意図しない引き伸ばし、encoder設定不一致、負荷急増を防ぐため |
+| compressed入力の受信fps、帯域、JPEG decode時間、H.264 encode時間、drop数をstatusへ出す | ROS 2ホスト | 100Mbpsで余裕があるか、計算資源が十分か、遅延原因がどこかを判定するため |
+| 13579/TCPのpeer IPをH.264送信先とし、要求内IPは照合・warning logだけに使う | `xrobot_camera_streamer` | 複数interfaceによる誤拒否と、別hostへの映像転送を防ぐため |
+| `AUDIO_SESSION`等の未知または未対応commandをframe長に従って読み捨て、接続を維持する | `xrobot_camera_streamer` | 現行Unityが`OPEN_CAMERA`より先に音声session commandを送るため |
+| `CLOSE_CAMERA`、control切断、SIGINT/SIGTERMでH.264 pipelineと全socketを解放する | `xrobot_camera_streamer` | Listen OFF/ONとlaunch再起動で13579/12345を再利用するため |
+
+JPEGは画像内容によってframe sizeが変動する。100Mbpsの理論値を上限として使わず、
+他のROS通信とprotocol overheadの余裕を確保する。運用開始時はcompressed imageを
+継続60 Mbps以下、可能なら数十Mbps以下に収めることを目安とし、実測値によって
+JPEG qualityまたはfpsを下げる。30 fpsで60 Mbpsは平均約250 KB/frameに相当する。
+
+ROS 2側のJPEG decodeとH.264 encodeはpipelineとして30 fpsを維持できることが必要で、
+単一frameの処理時間だけでなく、queue滞留とend-to-end latencyを監視する。
+処理能力が不足した場合は古いframeを捨て、遅れて全frameを処理しない。
+
+### ROS側の確認項目
+
+ROS 1 PCでcompressed publisherを確認する。
+
+```bash
+rostopic hz /torobo/head/camera/color/image_raw/compressed
+rostopic bw /torobo/head/camera/color/image_raw/compressed
+rostopic echo -n 1 /torobo/head/camera/color/image_raw/compressed
+```
+
+ROS 2ホストでbridge後のtopicを確認する。
+
+```bash
+export ROS_DOMAIN_ID=30
+ros2 topic info /torobo/head/camera/color/image_raw/compressed -v
+ros2 topic hz /torobo/head/camera/color/image_raw/compressed
+ros2 topic bw /torobo/head/camera/color/image_raw/compressed
+ros2 topic echo /xrobot/video_stream/status --once
+```
+
+確認中は、raw topicが100Mbps区間を流れていないこともinterface trafficまたはbridgeの
+topic一覧で確認する。少なくとも10分間連続運転し、次を合格条件とする。
+
+1. compressed image入力とPICO表示が目標30 fpsを維持する。
+2. 有線送信帯域に継続的な余裕があり、link上限へ張り付かない。
+3. JPEG decode/H.264 encodeのqueueが増加せず、古いframeが破棄される。
+4. PICO表示のend-to-end latencyが時間経過とともに増加しない。
+5. JPEG破損frameや一時的なtopic断の後、process再起動なしで復帰する。
+6. rosbagには従来どおりcompressed imageと`CameraInfo`が記録される。
+
+### Unity側への影響
+
+Unity側の入力はROS messageではなく、`xrobot_camera_streamer`が生成したH.264/TCPである。
+ROS 1/ROS 2間をrawからJPEG compressedへ変更しても、streamerが従来どおり
+1280x480 SBS、H.264/AVC、4-byte big-endian length prefix、PICO peer IPの
+12345/TCPへ出力する限り、Unity側の追加変更は不要である。
+
+JPEG decode後に640x480 monoのpixel imageへ戻す処理とSBS化はROS 2側の責務とする。
+UnityへJPEGを直接送る、640x480 monoへ映像protocolを変更する、texture layoutを
+変更する場合に限り、Unity decoderまたはshaderの追加変更が必要になる。
 
 ## 結合試験
 
@@ -230,7 +329,8 @@ PICO4では`TOROBO_CAMERA`を選択し、`192.168.88.173`へListenする。
 3. ListenのOFF/ON後に再接続できる。
 4. launch終了後にPICO4の12345番とホストの13579番を再利用できる。
 5. rosbagに映像とXR入力が記録される。
-6. Torobo PCとROS 2ホスト間の有線linkが1 GbEでnegotiationされている。
+6. 有線linkが1 GbEならraw bridgeを使用できる。100Mbpsならcompressed bridgeを使い、
+   raw imageを同時にbridgeせず、実測帯域と処理遅延が上記基準内に収まる。
 
 `640 x 480 x RGB 3 byte x 30 fps`はraw payloadだけで約27.6 MB/s（221 Mbps）となり、
 ROS serialization等のoverheadがさらに加わる。1 GbEならraw image bridgeを第一選択と

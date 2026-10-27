@@ -1028,6 +1028,7 @@ UnityEngine.Texture::Internal_GetActiveTextureColorSpace
 UnityEngine.Texture::GetNativeTexturePtr
 UnityEngine.Texture::get_texelSize_Injected
 UnityEngine.Texture::set_filterMode
+UnityEngine.Texture::set_wrapMode
 UnityEngine.Texture::get_filterMode
 UnityEngine.Texture::get_wrapMode
 UnityEngine.Texture2D::Internal_CreateImpl

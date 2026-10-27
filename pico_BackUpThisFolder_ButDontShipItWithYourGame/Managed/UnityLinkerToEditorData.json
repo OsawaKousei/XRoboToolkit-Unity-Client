@@ -11,7 +11,7 @@
           {
             "name": "AnimationClip",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -19,7 +19,7 @@
           {
             "name": "Animator",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -27,7 +27,7 @@
           {
             "name": "AnimatorController",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 1,
             "icon": null
@@ -35,7 +35,7 @@
           {
             "name": "AnimatorOverrideController",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -43,7 +43,7 @@
           {
             "name": "Avatar",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -51,7 +51,7 @@
           {
             "name": "AvatarMask",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -76,7 +76,7 @@
           {
             "name": "AudioBehaviour",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -90,7 +90,7 @@
           {
             "name": "AudioListener",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -139,7 +139,7 @@
           {
             "name": "Camera",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -177,7 +177,7 @@
           {
             "name": "EditorExtension",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 1,
             "icon": null
@@ -191,7 +191,7 @@
           {
             "name": "GameObject",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -217,7 +217,7 @@
           {
             "name": "LevelGameManager",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 1,
             "icon": null
@@ -243,7 +243,7 @@
           {
             "name": "LightmapSettings",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -251,7 +251,7 @@
           {
             "name": "LineRenderer",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -265,7 +265,7 @@
           {
             "name": "Material",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -273,7 +273,7 @@
           {
             "name": "Mesh",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -281,7 +281,7 @@
           {
             "name": "MeshFilter",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -289,7 +289,7 @@
           {
             "name": "MeshRenderer",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -297,7 +297,7 @@
           {
             "name": "MonoBehaviour",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -311,7 +311,7 @@
           {
             "name": "MonoScript",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 1,
             "icon": null
@@ -319,7 +319,7 @@
           {
             "name": "NamedObject",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 1,
             "icon": null
@@ -351,7 +351,7 @@
           {
             "name": "RectTransform",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -365,7 +365,7 @@
           {
             "name": "RenderSettings",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -373,7 +373,7 @@
           {
             "name": "RenderTexture",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -399,7 +399,7 @@
           {
             "name": "Shader",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -413,7 +413,7 @@
           {
             "name": "SkinnedMeshRenderer",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -421,7 +421,7 @@
           {
             "name": "SortingGroup",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -429,7 +429,7 @@
           {
             "name": "Sprite",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -443,7 +443,7 @@
           {
             "name": "SpriteRenderer",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -469,7 +469,7 @@
           {
             "name": "Texture2D",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -765,7 +765,7 @@
           {
             "name": "BoxCollider",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -773,7 +773,7 @@
           {
             "name": "CapsuleCollider",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -781,7 +781,7 @@
           {
             "name": "CharacterController",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -795,7 +795,7 @@
           {
             "name": "MeshCollider",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -809,7 +809,7 @@
           {
             "name": "Rigidbody",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -817,7 +817,7 @@
           {
             "name": "SphereCollider",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -1087,7 +1087,7 @@
           {
             "name": "Font",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -1130,7 +1130,7 @@
           {
             "name": "Canvas",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -1144,7 +1144,7 @@
           {
             "name": "CanvasRenderer",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null
@@ -1230,7 +1230,7 @@
           {
             "name": "VideoPlayer",
             "scenes": [
-              "Assets/Main.unity"
+              "Assets/Main-dev.unity"
             ],
             "dependencyType": 0,
             "icon": null

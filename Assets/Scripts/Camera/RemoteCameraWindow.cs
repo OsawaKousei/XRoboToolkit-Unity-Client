@@ -1,8 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
 using LitJson;
 using Network;
 using Robot;
@@ -16,17 +13,12 @@ using UnityEngine.UI;
 public class RemoteCameraWindow : MonoBehaviour
 {
     public RawImage RemoteCameraImage;
-    private TcpListener _tcpListener;
-    private TcpClient _client;
-    private NetworkStream _stream;
     private Texture2D _texture;
     public Texture2D Texture => _texture;
-    private byte[] _imageBuffer;
-    private CancellationTokenSource _receiveImageTs = null;
-    private Task _imageReceiveTask;
     private Coroutine _startListenCoroutine;
     private bool _listening;
-    private float _nextDecoderPollRealtime;
+    private bool _decoderReady;
+    private int _textureFailures;
     private float _nextHealthRealtime;
     private int _decoderPolls;
     private int _textureUpdates;
@@ -73,21 +65,13 @@ public class RemoteCameraWindow : MonoBehaviour
     private void OnDisable()
     {
         StopListen();
-        if (_texture != null)
-        {
-            if (RemoteCameraImage != null)
-            {
-                RemoteCameraImage.texture = null;
-            }
-            Destroy(_texture);
-            _texture = null;
-        }
         Debug.Log("RemoteCameraWindow OnDisable");
         TcpHandler.SendFunctionValue("StopReceivePcCamera", "");
     }
 
     public void StopListen()
     {
+        _decoderReady = false;
         if (_startListenCoroutine != null)
         {
             StopCoroutine(_startListenCoroutine);
@@ -99,7 +83,9 @@ public class RemoteCameraWindow : MonoBehaviour
             // The Android implementation closes both the listening ServerSocket
             // and an accepted Socket before joining its receive thread. This also
             // covers Listen-off while no video sender has connected yet.
-            MediaDecoder.release();
+            try { MediaDecoder.release(); }
+            catch (System.Exception error) { Debug.LogException(error); }
+            finally { GL.InvalidateState(); }
             _listening = false;
         }
 
@@ -127,13 +113,34 @@ public class RemoteCameraWindow : MonoBehaviour
     {
         Debug.Log("StartListen port:" + port);
 
-        _texture = new Texture2D(_resolutionWidth, _resolutionHeight, TextureFormat.RGB24, false, false);
+        // The Android decoder renders into this Unity texture through an OpenGL
+        // framebuffer. Use RGBA32 and allocate storage explicitly while investigating
+        // GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT; RGB24 alone was not proven causal.
+        _texture = new Texture2D(_resolutionWidth, _resolutionHeight, TextureFormat.RGBA32, false, false)
+        {
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp
+        };
+        // Allocate/upload the native GL texture before passing its ID to Java.
+        _texture.Apply(false, false);
         RemoteCameraImage.texture = _texture;
         yield return null;
 
-        MediaDecoder.initialize((int)_texture.GetNativeTexturePtr(), _resolutionWidth, _resolutionHeight);
-        MediaDecoder.startServer(port, false);
-        _startListenCoroutine = null;
+        bool initialized = false;
+        try
+        {
+            MediaDecoder.initialize((int)_texture.GetNativeTexturePtr(), _resolutionWidth, _resolutionHeight);
+            MediaDecoder.startServer(port, false);
+            _decoderReady = initialized = true;
+        }
+        catch (System.Exception error) { Debug.LogException(error); }
+        finally { GL.InvalidateState(); }
+        if (!initialized)
+        {
+            _startListenCoroutine = null;
+            StopListen();
+            yield break;
+        }
         yield return null;
 
         JsonData cameraParam = new JsonData();
@@ -144,6 +151,7 @@ public class RemoteCameraWindow : MonoBehaviour
         cameraParam["fps"] = _videoFps;
         cameraParam["bitrate"] = _bitrate;
         TcpHandler.SendFunctionValue("StartReceivePcCamera", cameraParam.ToJson());
+        _startListenCoroutine = null;
     }
 
     private void LateUpdate()
@@ -158,12 +166,13 @@ public class RemoteCameraWindow : MonoBehaviour
 
     private void Update()
     {
-        if (_texture == null || Application.platform != RuntimePlatform.Android)
+        if (!_decoderReady || _texture == null || Application.platform != RuntimePlatform.Android)
         {
             return;
         }
 
         float now = Time.realtimeSinceStartup;
+        if (VideoDiagnostic.PaintCpu(_texture)) return;
         float frameDeltaMs = Time.unscaledDeltaTime * 1000f;
         _frameDeltaMaxMs = Mathf.Max(_frameDeltaMaxMs, frameDeltaMs);
         if (frameDeltaMs >= HitchThresholdMs)
@@ -171,21 +180,25 @@ public class RemoteCameraWindow : MonoBehaviour
             _hitchFrames++;
         }
 
-        // JNI polling at the headset display refresh rate adds main-thread work
-        // without producing more video frames. Poll at twice the negotiated video
-        // rate (bounded to 30-60 Hz) and upload only when the decoder has a new frame.
-        float pollRate = Mathf.Clamp(Mathf.Max(1, _videoFps) * 2f, 30f, 60f);
-        if (now >= _nextDecoderPollRealtime)
+        // Match the reference: poll in Update, copy only a newly available frame.
+        long started = System.Diagnostics.Stopwatch.GetTimestamp();
+        try
         {
-            _nextDecoderPollRealtime = now + 1f / pollRate;
-            long started = System.Diagnostics.Stopwatch.GetTimestamp();
             bool hasFrame = MediaDecoder.isUpdateFrame();
             if (hasFrame)
             {
                 MediaDecoder.updateTexture();
-                GL.InvalidateState();
                 _textureUpdates++;
             }
+        }
+        catch (System.Exception error)
+        {
+            // A failed FBO copy must not count as a displayed frame.
+            if (_textureFailures++ == 0) Debug.LogException(error);
+        }
+        finally
+        {
+            GL.InvalidateState();
             double elapsedMs =
                 (System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000.0 /
                 System.Diagnostics.Stopwatch.Frequency;
@@ -204,6 +217,7 @@ public class RemoteCameraWindow : MonoBehaviour
                 "remote_video.health",
                 $"configured={_resolutionWidth}x{_resolutionHeight}@{_videoFps} " +
                 $"bitrate={_bitrate} texture_fps={_textureUpdates / windowSeconds:F1} " +
+                $"texture_failures={_textureFailures} " +
                 $"polls={_decoderPolls} poll_avg_ms={averagePollMs:F3} " +
                 $"poll_max_ms={_decoderPollMaxMs:F3} hitch_frames={_hitchFrames} " +
                 $"frame_max_ms={_frameDeltaMaxMs:F1}");
@@ -214,10 +228,10 @@ public class RemoteCameraWindow : MonoBehaviour
     private void ResetPerformanceWindow()
     {
         float now = Time.realtimeSinceStartup;
-        _nextDecoderPollRealtime = now;
         _nextHealthRealtime = now + HealthIntervalSeconds;
         _decoderPolls = 0;
         _textureUpdates = 0;
+        _textureFailures = 0;
         _hitchFrames = 0;
         _decoderPollTotalMs = 0.0;
         _decoderPollMaxMs = 0.0;

@@ -105,7 +105,11 @@ public class MediaDecoder {
             }
             Log.i(TAG, "Socket connected:" + port);
 
-            try (DataInputStream input = new DataInputStream(localSocket.getInputStream())) {
+            File diagnosticDir = new File("/sdcard/Android/data/com.morimotolab.xrobot/files");
+            boolean diagnostic = new File(diagnosticDir, "video-diagnostic.txt").isFile();
+            int diagnosticUnits = 0;
+            try (DataInputStream input = new DataInputStream(localSocket.getInputStream());
+                 FileOutputStream capture = diagnostic ? new FileOutputStream(new File(diagnosticDir, "diagnostic-received.h264")) : null) {
                 while (receiving && !Thread.currentThread().isInterrupted()) {
                     byte[] header = new byte[4];
                     input.readFully(header);
@@ -118,6 +122,10 @@ public class MediaDecoder {
 
                     byte[] body = new byte[bodyLength];
                     input.readFully(body);
+                    if (capture != null && diagnosticUnits++ < 150) {
+                        capture.write(body);
+                        if (diagnosticUnits == 150) Log.i(TAG, "DIAGNOSTIC captured 150 access units");
+                    }
                     if (!receiving || Thread.currentThread().isInterrupted()) {
                         break;
                     }

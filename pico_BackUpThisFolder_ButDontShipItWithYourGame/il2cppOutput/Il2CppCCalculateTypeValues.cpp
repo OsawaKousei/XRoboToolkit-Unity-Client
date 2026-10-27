@@ -1968,7 +1968,6 @@ struct TaskFactory_tF781BD37BE23917412AD83424D1497C7C1509DF0;
 struct TaskScheduler_t3F0550EBEF7C41F74EC8C08FF4BED0D8CE66006E;
 struct TaskTraceCallbacks_tD17B8D9DCCE22E4D578E7A307A6154CE1EA12B71;
 struct TcpClient_t753B702EE06B59897564F75CEBFB6C8AFF10BD58;
-struct TcpListener_t306B041DAC7763F1A05DAA9FA9F4BAADEF94EF82;
 struct TeleportVolumeDestinationSettings_t997F47ECBFA0D750BC9F96D8EF12222BD9F332C2;
 struct TeleportVolumeDestinationSettingsDatum_t514DEBABFFD4194BEF98BD2C91B69E100CCC991E;
 struct TeleportVolumeDestinationSettingsDatumProperty_tDD5453B35B45AEB0427BCD5BE987332B3CD14347;
@@ -7733,7 +7732,7 @@ struct U3CU3Ec_t5EA02DDAC243350B238C9DADB2DEC34B8CC72753  : public RuntimeObject
 struct SingleRangeComparer_t2D299E0E54D7F24BAF67EA65E92B6FCDB806F9D0  : public RuntimeObject
 {
 };
-struct U3COnStartListenU3Ed__34_t7386BD1FE003A8A0D7A6E67C4D26DDBC53096B8A  : public RuntimeObject
+struct U3COnStartListenU3Ed__29_t252004ED31F8DC6445DD5F1081E95FE11A56EC6E  : public RuntimeObject
 {
 	int32_t ___U3CU3E1__state;
 	RuntimeObject* ___U3CU3E2__current;
@@ -45996,16 +45995,11 @@ struct ReflectionOnlyType_t1D06C75F6324C18610570EF18519232B2193A199  : public Ru
 struct RemoteCameraWindow_t0FEB59EBB2368188E1CE237DC8E36B519BAF3B8C  : public MonoBehaviour_t532A11E69716D348D8AA7F854AFCBFCB8AD17F71
 {
 	RawImage_tFF12F7DB574FBDC1863CF607C7A12A5D9F8D6179* ___RemoteCameraImage;
-	TcpListener_t306B041DAC7763F1A05DAA9FA9F4BAADEF94EF82* ____tcpListener;
-	TcpClient_t753B702EE06B59897564F75CEBFB6C8AFF10BD58* ____client;
-	NetworkStream_tF39C3684B6D572BF47F518AD1DB1F4B12CEE4AE0* ____stream;
 	Texture2D_tE6505BC111DD8A424A9DBE8E05D7D09E11FFFCF4* ____texture;
-	ByteU5BU5D_tA6237BF417AE52AD70CFB4EF24A7A82613DF9031* ____imageBuffer;
-	CancellationTokenSource_tAAE1E0033BCFC233801F8CB4CED5C852B350CB7B* ____receiveImageTs;
-	Task_t751C4CC3ECD055BABA8A0B6A5DFBB4283DCA8572* ____imageReceiveTask;
 	Coroutine_t85EA685566A254C23F3FD77AB5BDFFFF8799596B* ____startListenCoroutine;
 	bool ____listening;
-	float ____nextDecoderPollRealtime;
+	bool ____decoderReady;
+	int32_t ____textureFailures;
 	float ____nextHealthRealtime;
 	int32_t ____decoderPolls;
 	int32_t ____textureUpdates;
@@ -66302,7 +66296,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize5392 = { sizeof(U3CU3Ec__Dis
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize5393;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize5393 = { sizeof(RemotePcmAudioPlayer_tE73DAB57B13F6701363AD6F03F59CEB5F9B3744A), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize5394;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize5394 = { sizeof(U3COnStartListenU3Ed__34_t7386BD1FE003A8A0D7A6E67C4D26DDBC53096B8A), -1, 0, 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize5394 = { sizeof(U3COnStartListenU3Ed__29_t252004ED31F8DC6445DD5F1081E95FE11A56EC6E), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize5395;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize5395 = { sizeof(RemoteCameraWindow_t0FEB59EBB2368188E1CE237DC8E36B519BAF3B8C), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize5396;

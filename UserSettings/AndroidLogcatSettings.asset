@@ -3,7 +3,7 @@
     "m_SelectedProcess": {
         "deviceId": "PA94U0MGL6240197G",
         "name": "com.morimotolab.xrobot",
-        "processId": 21601,
+        "processId": 11590,
         "exited": false
     },
     "m_SelectedPriority": 0,
@@ -12,6 +12,18 @@
             "deviceId": "PA94U0MGL6240197G",
             "name": "com.morimotolab.xrobot",
             "processId": 21601,
+            "exited": false
+        },
+        {
+            "deviceId": "PA94U0MGL6240197G",
+            "name": "com.morimotolab.xrobot",
+            "processId": 6241,
+            "exited": false
+        },
+        {
+            "deviceId": "PA94U0MGL6240197G",
+            "name": "com.morimotolab.xrobot",
+            "processId": 11590,
             "exited": false
         }
     ],
